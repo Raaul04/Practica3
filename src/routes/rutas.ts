@@ -2,6 +2,7 @@ import { Router } from "express";
 import { getDB } from "../mongo";
 import { ComicVault } from "../types";
 import { NextFunction, Request, Response } from "express";
+import { AuthRequest, verifyToken } from "../middleware/verifyToken";
 
 
 
@@ -10,7 +11,7 @@ const router = Router()
 const coleccion = () => getDB().collection<ComicVault>("comics")
 
 
-router.get("/", async (req, res) => {
+router.get("/", verifyToken, async (req:AuthRequest, res) => {
     try {
 
         const page = Number(req.query?.page) || 1
@@ -25,7 +26,10 @@ router.get("/", async (req, res) => {
                     page: page,
                     numeroComics: limit
                 },
-                comics: comics
+                comics: comics,
+
+                message:"todo correcto",
+                user:req.user
             }
 
         )
