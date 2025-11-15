@@ -27,7 +27,8 @@ export const verifyToken = (req: AuthRequest, res: Response, next: NextFunction)
         }
 
         req.userJwt=decoded 
-        next()
+        next()//Si NO pones next(), 
+             // Express se queda parado y la ruta nunca se ejecuta.
     })
 
 

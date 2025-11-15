@@ -1,8 +1,9 @@
 import { Router } from "express";
 import { getDB } from "../mongo";
 import { ComicVault } from "../types";
-import { NextFunction, Request, Response } from "express";
+import { Response } from "express";
 import { AuthRequest, verifyToken } from "../middleware/verifyToken";
+import { ObjectId } from "mongodb";
 
 
 
@@ -19,12 +20,12 @@ router.get("/", verifyToken, async (req: AuthRequest, res) => {
         const limit = Number(req.query?.limit) || 30
         const skip = (page - 1) * limit
 
-        const usercito= req.userJwt as {
-            id:string,
-            name:"string"
+        const usercito = req.userJwt as {
+            id: string,
+            name: string
         }
 
-        const comics = await coleccion().find({userId:usercito.id}).skip(skip).limit(limit).toArray()
+        const comics = await coleccion().find({ userId: usercito.id }).skip(skip).limit(limit).toArray()
 
         res.status(200).json(
             {
@@ -34,8 +35,10 @@ router.get("/", verifyToken, async (req: AuthRequest, res) => {
                 },
                 comics: comics,
 
+                user: req.userJwt,
                 message: "todo correcto",
-                user: req.userJwt
+
+
             }
 
         )
@@ -51,10 +54,15 @@ router.post("/", verifyToken, async (req: AuthRequest, res: Response) => {
 
         const { title, author, year, publisher } = req.body as ComicVault
 
-        if (!title || !author || !year || !publisher) {
+        if (!title || !author || !year) {
             return res.status(400).json({ message: "Faltan datos" });
         }
-        
+
+        if (publisher && typeof publisher !== "string") {
+            return res.status(400).json({ message: "Publisher no válido" });
+        }
+
+
         const usercito = req.userJwt as {
             id: string,
             name: string
@@ -81,11 +89,56 @@ router.post("/", verifyToken, async (req: AuthRequest, res: Response) => {
         )
 
     } catch (error) {
-        res.status(500).json({message:error})
+        res.status(500).json({ message: error })
     }
 })
 
-//router.put("/:id",)
+router.put("/:id", verifyToken, async (req: AuthRequest, res: Response) => {
+    try {
+
+        const { title, author, year, publisher } = req.body as ComicVault
+        const comics = coleccion()
+
+        if (!title || !author || !year) {
+            return res.status(400).json({ message: "Faltan datos en el body" })
+        }
+
+        if (publisher && typeof publisher !== "string") {
+            return res.status(400).json({ message: "Publisher no válido" });
+        }
+
+        const usercito = req.userJwt as {
+            id: string,
+            name: string
+        }
+
+        const comicUpdate = await comics.updateOne(
+            { _id: new ObjectId(req.params.id), userId: usercito.id },
+            { $set: req.body }
+        )
+
+        if (comicUpdate.matchedCount === 0) {
+            return res.status(400).json({ message: "No se encontro el comic o no pertenece a ese usuario" })
+        }
+        if (comicUpdate.modifiedCount === 0) {
+            return res.status(400).json({ message: "No se ha modificado nada" })
+        }
+
+        res.status(200).json({
+            IdComicActualizado: req.params.id,
+            cambios: req.body,
+            message: "Comic Actualizado",
+
+        })
+
+
+
+
+    } catch (error) {
+        res.status(500).json({ message: error })
+
+    }
+})
 
 //router.delete("/:id")
 
