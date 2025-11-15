@@ -42,7 +42,6 @@ router.post("/register", async (req, res) => {
            return  res.status(404).json({message:"Ya existe una persona con dicho nombre"})
         }*/
 
-
         const passToENcripts=await bcrypt.hash(password,10)
         await users.insertOne({name,password:passToENcripts})
 

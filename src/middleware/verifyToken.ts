@@ -10,7 +10,6 @@ const SECRET=process.env.SECRET
 
 export interface AuthRequest extends Request{
     userJwt?:jwt.JwtPayload |string
-
 }
 
 
