@@ -68,11 +68,14 @@ router.post("/login", async (req, res) => {
         if(!passEncriptarYSinEncriptarIguales) return res.status(401).json({message:"Contraseña Incorrecta"})
 
 
-        const token=jwt.sign({id:exitsUser._id?.toString(),name:exitsUser.name},SECRET as string,{
+        const token=jwt.sign({id:exitsUser._id?.toString(),name:exitsUser.name} as JwtPayload,SECRET as string,{
             expiresIn:"1h"
         })
 
-        res.json({message:"Logeao", token})
+        res.json(
+            {message:"Logeao",
+             token: "Bearer " + token,//La palabra Bearer significa: "Este token lo manda el cliente para demostrar que está autenticado".
+        })
 
 
     } catch (error) {
