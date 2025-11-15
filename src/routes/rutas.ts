@@ -140,7 +140,41 @@ router.put("/:id", verifyToken, async (req: AuthRequest, res: Response) => {
     }
 })
 
-//router.delete("/:id")
+router.delete("/:id", verifyToken, async (req: AuthRequest, res: Response) => {
+    try{
+        const comics = coleccion()
+
+        const usercito = req.userJwt as {
+            id: string,
+            name: string
+        }
+
+        const id = req.params.id
+
+        if (!ObjectId.isValid(id)) {
+            return res.status(400).json({ message: "ID no valido" })
+        }
+
+        const borrarComic = await comics.deleteOne({
+            _id: new ObjectId(id),
+            userId: usercito.id
+        })
+
+        if (borrarComic.deletedCount === 0) {
+            return res.status(404).json({
+                message: "No se encontro el cmic"
+            })
+        }
+
+        res.status(200).json({
+            message: "comic eliminado",
+            idBorrado: id
+        })
+
+    }catch(err){
+        res.status(500).json({ message: err})
+    }
+})
 
 
 export default router
